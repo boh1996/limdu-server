@@ -36,5 +36,6 @@
   },
   "devDependencies": [],
   "dependencies": {
+    "limdu": "^0.8.0"
   }
 }
