@@ -1,0 +1,40 @@
+{
+  "name": "Limdu Server",
+  "version": "0.1.0",
+  "authors": [
+    {
+      "name": "Bo Thomsen",
+      "url": "bothomsen.me",
+      "email": "boh1996@gmail.com"
+    }
+  ],
+  "contributors": [
+    {
+      "name": "Bo Thomsen",
+      "url": "bothomsen.me",
+      "email": "boh1996@gmail.com"
+    }
+  ],
+  "main": "src/index.js",
+  "description": "Limdu Server",
+  "keywords": [
+    "Limdu"
+  ],
+  "homepage": "https://github.com/boh1996/limdu-server",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/boh1996/limdu-server/issues",
+    "email": "boh1996@gmail.com"
+  },
+  "private": false,
+  "engines": {
+    "node": "4.2.x"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/boh1996/limdu-server.git"
+  },
+  "devDependencies": [],
+  "dependencies": {
+  }
+}
