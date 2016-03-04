@@ -36,6 +36,10 @@
   },
   "devDependencies": [],
   "dependencies": {
-    "limdu": "^0.8.0"
+    "cheerio": "^0.20.0",
+    "limdu": "^0.8.0",
+    "request": "^2.69.0",
+    "serialization": "^0.2.0",
+    "unfluff": "^1.0.0"
   }
 }
