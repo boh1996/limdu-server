@@ -1,6 +1,7 @@
 var fs = require('fs');
-var request = require('request');
+var request = require('request'), iconv  = require('iconv-lite');
 var cheerio = require('cheerio');
+var SnowBall = require('jsnowball');
 
 // Import CSV
 var csv = require("fast-csv");
@@ -25,7 +26,7 @@ function newClassifierFunction() {
 
 // Limdu
 var serialize = require('serialization');
-//var intentClassifier = serialize.fromString(fs.readFileSync("data/model.data", 'utf8'), __dirname);
+var intentClassifier = serialize.fromString(fs.readFileSync("data/model.data", 'utf8'), __dirname);
 
 //var intentClassifier = newClassifierFunction();
 
@@ -63,6 +64,7 @@ var end = false;
 // Parse URL
 function parse ( url, category, language, callback ) {
 	request(url, function (error, response, body) {
+		var body = iconv.decode(new Buffer(body), "ISO-8859-1");
 		if ( ! error && ( response.statusCode == 200 || response.statusCode == 300 ) ) {
 			$ = cheerio.load(body);
 
@@ -76,7 +78,17 @@ function parse ( url, category, language, callback ) {
 				data.text = data.text.replace(new RegExp('\\b' + word + '\\b', "gi"), '').replace("  ", " ");
 			});
 
-			console.log(data.text);
+			data.text = data.text.replace(/\n\r/g, " ").replace(/\n/g, " ").replace(".", "").replace(/\s{2,}/g, ' ').trim();
+
+			var snowBall = new SnowBall('danish');
+			snowBall.stem(data.text, function( error,response ) {
+				if ( ! error ) {
+					var text = response.join(" ");
+					console.log(intentClassifier.classify(text));
+					//intentClassifier.trainOnline(text, category);
+					//fs.writeFile( "data/model.data", serialize.toString(intentClassifier, newClassifierFunction), "utf8" );
+				}
+			});
 
 			//console.log(intentClassifier.classify(data.text));
 

@@ -37,6 +37,10 @@
   "devDependencies": [],
   "dependencies": {
     "cheerio": "^0.20.0",
+    "fast-csv": "^1.0.0",
+    "iconv-lite": "^0.4.13",
+    "java": "^0.6.1",
+    "jsnowball": "^1.0.3",
     "limdu": "^0.8.0",
     "request": "^2.69.0",
     "serialization": "^0.2.0",
