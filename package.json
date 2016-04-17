@@ -42,6 +42,7 @@
     "java": "^0.6.1",
     "jsnowball": "^1.0.3",
     "limdu": "^0.8.0",
+    "natural": "^0.2.1",
     "request": "^2.69.0",
     "serialization": "^0.2.0",
     "unfluff": "^1.0.0"

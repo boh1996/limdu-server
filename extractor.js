@@ -2,6 +2,8 @@ var fs = require('fs');
 var request = require('request'), iconv  = require('iconv-lite');
 var cheerio = require('cheerio');
 var SnowBall = require('jsnowball');
+var natural = require('natural');
+var uwords = require('uwords');
 
 // Import CSV
 var csv = require("fast-csv");
@@ -10,17 +12,16 @@ var csv = require("fast-csv");
 function newClassifierFunction() {
 		var limdu = require('limdu');
 
-		// First, define our base classifier type (a multi-label classifier based on svm.js):
 		var TextClassifier = limdu.classifiers.multilabel.BinaryRelevance.bind(0, {
-		    binaryClassifierType: limdu.classifiers.Winnow.bind(0, {retrain_count: 10})
+			binaryClassifierType: limdu.classifiers.SvmJs.bind(0, {C: 1.0})
 		});
 
 		// Initialize a classifier with a feature extractor and a lookup table:
 		return new limdu.classifiers.EnhancedClassifier({
-		    classifierType: TextClassifier,
-		    featureExtractor: limdu.features.NGramsOfWords(1),  // each word ("1-gram") is a feature
-		    featureLookupTable: new limdu.features.FeatureLookupTable(),
-		    pastTrainingSamples: []
+			classifierType: TextClassifier,
+			featureExtractor: limdu.features.NGramsOfWords(1),
+			featureLookupTable: new limdu.features.FeatureLookupTable(),
+			pastTrainingSamples: []
 		});
 }
 
@@ -61,8 +62,8 @@ var startIndex = 0;
 var doneIndex = 0;
 var end = false;
 
-/*csv
-.fromPath("data/import/MatchReports.csv")
+csv
+.fromPath("data/import/MatchPreviews.csv")
 .on("data", function(data){
 	if ( data[0].indexOf("http") < 0 ) {
 		return;
@@ -70,7 +71,7 @@ var end = false;
 
 	startIndex++;
 
-	parse(data[0], data[1], function () {
+	parse(data[0], data[1], "da", function () {
 		doneIndex++;
 
 		if ( startIndex == doneIndex && end == true ) {
@@ -83,7 +84,7 @@ var end = false;
 	end = true;
 }).on("error", function () {
 	console.log("Error");
-});*/
+});
 
 // Parse URL
 function parse ( url, category, language, callback ) {
@@ -99,29 +100,44 @@ function parse ( url, category, language, callback ) {
 			stopwords.forEach(function ( word, index ) {
 				word = word.trim();
 
-				data.text = data.text.replace(new RegExp('\\b' + word + '\\b', "gi"), '').replace("  ", " ");
+				data.text = data.text.replace(new RegExp('\\b' + word + '\\b', "gi"), '');
 			});
 
-			data.text = data.text.replace(/\n\r/g, " ").replace(/\n/g, " . ").replace(".", "").replace(/\s{2,}/g, ' ').trim();
+			data.text = data.text.replace(/\n\r/g, " ").replace(/\n/g, ". ").replace(".", " ").replace(/\s{2,}/g, ' ').trim();
 
 			var snowBall = new SnowBall('danish');
-			snowBall.stem(data.text, function( error,response ) {
-				if ( ! error ) {
-					var text = response.join(" ");
-					removeEntities( text, language, function ( text ) {
-						intentClassifier.trainOnline(text, category);
-						fs.writeFile( "data/model.data", serialize.toString(intentClassifier, newClassifierFunction), "utf8" );
-					} );
-				}
-			});
+			removeEntities( data.text, language, function ( text ) {
+				text = text.toLowerCase();
+				snowBall.stem(text, function( error,response ) {
+					if ( ! error ) {
+						text = response.join(" ");
+						
+						var words = uwords(text);
 
-			//console.log(intentClassifier.classify(data.text));
+						var wordsCount = new Map([...new Set(words)].map(
+							x => [x, words.filter(y => y === x).length]
+						));
 
-			//intentClassifier.trainOnline(data.text, category);
-				
-			//fs.writeFile( "data/model.data", serialize.toString(intentClassifier, newClassifierFunction), "utf8" );
-			//callback();
+						var words = [];
 
+						wordsCount.forEach( function ( y, x ) {
+							if ( y > 1 ) {
+								words.push(x);
+							}
+						} );
+
+						text = words.join(" ");
+						console.log(intentClassifier.classify(text));
+
+						//intentClassifier.trainOnline(text, category);
+						intentClassifier.trainBatch([
+							{input: text, output: category}
+						]);
+						//intentClassifier.retrain();
+						callback();
+					}
+				});
+			} );
 		} else {
 			console.log(error);
 			// Error
@@ -183,16 +199,14 @@ function removeEntities ( text, language, callback ) {
 
 		entities.forEach(function ( entity, index ) {
 			if ( index != null && index != undefined && entity != undefined ) {
-				text = text.replace(new RegExp('\\b' + entity + '\\b', "gi"), '').replace("  ", " ");
+				text = text.replace(new RegExp('\\b' + entity + '\\b', "gi"), ' ');
 			}
 		});
 
-		text = text.replace(/-/g, "").replace(new RegExp(" r ", "g"));
-
-		console.log(text);
+		text = text.replace(/-/g, "").replace(/\./g, " ").replace(/,/g, " ");
 
 		callback(text);
 	});
 }
 
-parse("http://www.bold.dk/fodbold/nyheder/broendby-henter-profil-i-lyngby/", "Soccer/Transfers", "da");
+//parse("http://www.bold.dk/fodbold/nyheder/ac-horsens-henter-peter-nymann/", "", "da");
