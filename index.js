@@ -1,3 +1,5 @@
+require('babel-register');
+
 var fs = require('fs');
 var serialize = require('serialization');
 var intentClassifier = serialize.fromString(fs.readFileSync("data/model.data", 'utf8'), __dirname);
